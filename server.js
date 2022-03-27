@@ -22,16 +22,20 @@ const Schema = new mongoose.Schema({
 
 const User = mongoose.model("User", Schema);
 
-app.post('/api/users', async (req, res) => {
+app.post("/api/users", async (req, res) => {
   const username = req.body.username;
-  const user = new User({ username })
+  const user = new User({ username });
   await user.save((err, data) => {
     res.json({
       username: data.username,
-      _id: data.id
-    })
-  })
-})
+      _id: data.id,
+    });
+  });
+});
 
+app.get("/api/users", async (req, res) => {
+  const result = await User.find({});
+  res.json(result);
+});
 
 app.listen(3000);
