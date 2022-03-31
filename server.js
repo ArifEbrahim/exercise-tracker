@@ -28,21 +28,20 @@ const ExerciseSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model("User", UserSchema);
-const Exercise = mongoose.model('Exercise', ExerciseSchema);
+const Exercise = mongoose.model("Exercise", ExerciseSchema);
+
+const createAndSaveUser = async (username) => {
+  const user = new User({ username });
+  return await user.save();
+};
 
 app.post("/api/users", async (req, res) => {
   const username = req.body.username;
-  const user = new User({ username });
-  await user.save((err, data) => {
-    if (err || !data) {
-      res.send("Error: user not saved");
-    } else {
-      res.json({
-        username: data.username,
-        _id: data.id,
-      });
-    }
-  });
+  const newUser = await createAndSaveUser(username);
+  res.json({
+      username: newUser.username,
+      _id: newUser.id
+  })
 });
 
 app.get("/api/users", async (req, res) => {
@@ -52,20 +51,20 @@ app.get("/api/users", async (req, res) => {
 
 app.post("/api/users/:_id/exercises", (req, res) => {
   const _id = req.params._id;
-  User.findById({_id}, (err, userData) => {
+  User.findById({ _id }, (err, userData) => {
     if (err || !userData) {
-      res.send('Error: user not found')
+      res.send("Error: user not found");
     } else {
       const { description, duration, date } = req.body;
       const exercise = new Exercise({
         userId: _id,
         description,
         duration,
-        date: new Date(date)
-      })
+        date: new Date(date),
+      });
       exercise.save((err, data) => {
-        if(err || !data) {
-          res.send('Error: exercise not saved')
+        if (err || !data) {
+          res.send("Error: exercise not saved");
         } else {
           const { description, duration, date, userId } = data;
           const { username } = userData;
@@ -74,12 +73,12 @@ app.post("/api/users/:_id/exercises", (req, res) => {
             description,
             duration,
             date: date.toDateString(),
-            _id: userId
-          })
+            _id: userId,
+          });
         }
-      })
+      });
     }
-  })
+  });
 });
 
 app.get("/api/clear", async (req, res) => {
