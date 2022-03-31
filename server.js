@@ -55,7 +55,7 @@ app.get("/api/users", async (req, res) => {
 });
 
 app.post("/api/users/:_id/exercises", async (req, res) => {
-  const _id = req.params._id;
+  const { _id}  = req.params
   const { description, duration } = req.body;
   const date = req.body.date ? new Date(req.body.date) : new Date();
   const exercise = {
@@ -72,7 +72,43 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
     username,
     description,
     duration: parseInt(duration),
-    date: result.date.toDateString()
+    date: result.date.toDateString(),
+  });
+});
+
+app.get("/api/users/:_id/logs", async (req, res) => {
+  const { _id}  = req.params
+  const { from, to, limit = 100 } = req.query;
+
+  const user = await User.findById({ _id });
+  const { username } = user;
+
+  let dateObj = {};
+  if(from) {
+    dateObj["$gte"] = new Date(from);
+  }
+  if(to) {
+    dateObj["$lte"] = new Date(to);
+  }
+  let filter = {
+    userId: _id
+  }
+  if(from || to) {
+    filter.date = dateObj;
+  }
+
+  const rawLog = await Exercise.find(filter).limit(limit).exec()
+  const log = rawLog.map(entry => ({
+    description: entry.description,
+    duration: entry.duration,
+    date: entry.date.toDateString()
+  }))
+  const count = log.length;
+  res.json({
+    username,
+    count,
+    _id,
+    log,
   });
 });
 
