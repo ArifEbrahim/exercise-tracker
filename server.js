@@ -35,13 +35,18 @@ const createAndSaveUser = async (username) => {
   return await user.save();
 };
 
+const createAndSaveExercise = async (exerciseDetails) => {
+  const exercise = new Exercise(exerciseDetails);
+  return await exercise.save();
+};
+
 app.post("/api/users", async (req, res) => {
   const username = req.body.username;
-  const newUser = await createAndSaveUser(username);
+  const result = await createAndSaveUser(username);
   res.json({
-      username: newUser.username,
-      _id: newUser.id
-  })
+    username: result.username,
+    _id: result.id,
+  });
 });
 
 app.get("/api/users", async (req, res) => {
@@ -49,35 +54,24 @@ app.get("/api/users", async (req, res) => {
   res.json(result);
 });
 
-app.post("/api/users/:_id/exercises", (req, res) => {
+app.post("/api/users/:_id/exercises", async (req, res) => {
   const _id = req.params._id;
-  User.findById({ _id }, (err, userData) => {
-    if (err || !userData) {
-      res.send("Error: user not found");
-    } else {
-      const { description, duration, date } = req.body;
-      const exercise = new Exercise({
-        userId: _id,
-        description,
-        duration,
-        date: new Date(date),
-      });
-      exercise.save((err, data) => {
-        if (err || !data) {
-          res.send("Error: exercise not saved");
-        } else {
-          const { description, duration, date, userId } = data;
-          const { username } = userData;
-          res.json({
-            username,
-            description,
-            duration,
-            date: date.toDateString(),
-            _id: userId,
-          });
-        }
-      });
-    }
+  const { description, duration, date = Date.now() } = req.body;
+  const exercise = {
+    userId: _id,
+    description,
+    duration,
+    date: new Date(date),
+  };
+  const result = await createAndSaveExercise(exercise);
+  const user = await User.findById({ _id });
+  const { username } = user;
+  res.json({
+    _id,
+    username,
+    description,
+    duration,
+    date: result.date.toDateString(),
   });
 });
 
