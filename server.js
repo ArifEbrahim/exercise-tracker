@@ -82,4 +82,10 @@ app.post("/api/users/:_id/exercises", (req, res) => {
   })
 });
 
+app.get("/api/clear", async (req, res) => {
+  await User.deleteMany({});
+  await Exercise.deleteMany({});
+  res.send("Database cleared");
+});
+
 app.listen(3000);
